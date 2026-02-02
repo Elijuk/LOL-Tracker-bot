@@ -1,13 +1,16 @@
 # ========== Imports ==========
+import os
+import dotenv
 import aiohttp
 
+dotenv.load_dotenv()
 
 # ========== Configuration ==========
 # we request data from riot. riot looks at headers to check for access.
 # riot looks for "X-Riot-Token"
-API_KEY = ""
+RIOT_TOKEN = os.getenv("RIOT_TOKEN")
 HEADERS = {
-    "X-Riot-Token" : API_KEY
+    "X-Riot-Token" : RIOT_TOKEN
 }
 
 # step 1: region. jayden is from a different server so fuck.
