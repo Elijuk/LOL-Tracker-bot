@@ -28,8 +28,8 @@ if token is None:
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")
-
-    await tree.sync()
-
+    MY_GUILD = discord.Object(id=1461904966212911297)
+    tree.copy_global_to(guild=MY_GUILD)
+    await tree.sync(guild=MY_GUILD)
 
 client.run(token)
