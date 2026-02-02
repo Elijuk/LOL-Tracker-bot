@@ -6,11 +6,12 @@ import aiohttp
 # we request data from riot. riot looks at headers to check for access.
 # riot looks for "X-Riot-Token"
 API_KEY = ""
-headers = {
+HEADERS = {
     "X-Riot-Token" : API_KEY
 }
 
 # step 1: region. jayden is from a different server so fuck.
+# (this is used to build the URL)
 REGIONS = {
     # AMERICAS
     "NA": "https://americas.api.riotgames.com",
@@ -37,3 +38,40 @@ REGIONS = {
     "TH": "https://sea.api.riotgames.com",
     "VN": "https://sea.api.riotgames.com",
 }
+
+# STEPS: PUUID -> MATCH ID -> DATA
+# URL: REGION -> COMMAND -> INPUT
+
+
+# ========== Functions ==========
+async def get_puuid(game_name: str, tag_line: str, region_code: str) -> str | None:
+    # 1. REGION URL
+    region_url = REGIONS.get(region_code)
+    if region_url is None: return
+
+    # 2. COMMAND URL
+    command_url = "riot/account/v1/accounts/by-riot-id"
+
+    # 3. INPUT
+    input_url = f"{game_name}/{tag_line}"
+
+    full_url = f"{region_url}/{command_url}/{input_url}"
+
+    # 'open browser'
+    # closes automatically
+    async with aiohttp.ClientSession() as session:
+
+        # hit the URL
+        # send request
+        async with session.get(full_url, headers=HEADERS) as response:
+
+            # 200 = ok, 404 not found (global HTTP)
+            if response.status == 200:
+
+                data = await response.json()
+
+                return data['puuid']
+
+            else:
+                print(f"Error: {response.status}")
+                return None
