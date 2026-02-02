@@ -2,7 +2,9 @@
 import os
 import dotenv
 import aiohttp
-from typing import Any, Optional
+
+from typing import Optional
+from riot.riot_types import MatchData
 
 
 # ========== Configuration ==========
@@ -73,7 +75,7 @@ async def get_puuid(
         async with session.get(full_url, headers=HEADERS) as response:
             if response.status == 200:
                 data = await response.json()
-                return data['puuid']
+                return data.get("puuid")
 
             else:
                 print(f"Error: {response.status}")
@@ -105,10 +107,10 @@ async def get_match_id(
             if response.status == 200:
                 data: list[str] = await response.json()
             
-                if len(data) > 0:
-                    return data[0]
+                if not data:
+                    return None
                 
-                return None
+                return data[0]
             
             else:
                 print(f"Error: {response.status}")
@@ -118,7 +120,7 @@ async def get_match_id(
 async def get_match_data(
     match_id: str,
     region: RegionCode
-) -> Optional[dict[str, Any]]:
+) -> Optional[MatchData]:
     """Retrieves the data of a match ID and region.
 
     Args:
