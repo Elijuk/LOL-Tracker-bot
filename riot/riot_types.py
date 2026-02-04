@@ -448,6 +448,7 @@ class MatchMetadata(TypedDict):
     dataVersion: str
     participants: List[str]     # List of participants PUUIDs
 
+# THIS IS THE JSON RESPONSE
 class MatchData(TypedDict):
     metadata: MatchMetadata
     info: MatchInfo
