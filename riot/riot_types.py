@@ -11,33 +11,28 @@ Primarily used to enable autocomplete when getting specific data from the huge J
 
 # ========== Imports ==========
 from typing import TypedDict, List
-# ... rest of your code ...
-
-
-# ========== Imports ==========
-from typing import TypedDict, List
 
 
 # ========== Perks Wrappers ==========
-class PerksData(TypedDict):
-    statPerks: PerkStatData
-    styles: List[PerkStyleData]
-
 class PerkStatData(TypedDict):
     defense: int
     flex: int
     offense: int
 
-class PerkStyleData(TypedDict):
-    description: str
-    selections: List[PerkStyleSelectionData]
-    style: int
+class PerksData(TypedDict):
+    statPerks: PerkStatData
+    styles: List[PerkStyleData]
 
 class PerkStyleSelectionData(TypedDict):
     perk: int
     var1: int
     var2: int
     var3: int
+
+class PerkStyleData(TypedDict):
+    description: str
+    selections: List[PerkStyleSelectionData]
+    style: int
 
 
 # ========== Challenges Data ==========
@@ -395,6 +390,10 @@ class ParticipantData(TypedDict, total=False):
 
 
 # ========== Objective Data ==========
+class ObjectiveData(TypedDict):
+    first: bool
+    kills: int
+
 class ObjectivesData(TypedDict):
     baron: ObjectiveData
     champion: ObjectiveData
@@ -404,21 +403,17 @@ class ObjectivesData(TypedDict):
     riftHerald: ObjectiveData
     tower: ObjectiveData
 
-class ObjectiveData(TypedDict):
-    first: bool
-    kills: int
-
 
 # ========== Team Wrappers ==========
+class BanData(TypedDict):
+    championId: int
+    pickTurn: int
+
 class TeamData(TypedDict):
     bans: List[BanData]
     objectives: ObjectivesData
     teamId: int
     win: bool
-
-class BanData(TypedDict):
-    championId: int
-    pickTurn: int
 
 
 # ========== Match Wrappers ==========
