@@ -246,7 +246,7 @@ class TrackManager:
         if not guild_map.get(guild_id_str):
             return None
 
-        return Guild(guild_id_int, guild_map[guild_id_str])
+        return Guild(guild_id_str, guild_map[guild_id_str])
     
     def add_guild(self, guid_id_int: int) -> Guild | None:
         """
@@ -277,7 +277,7 @@ class TrackManager:
                 }
             }
         
-        return Guild(guid_id_int, guild_map[guid_id_str])
+        return Guild(guid_id_str, guild_map[guid_id_str])
     
     def remove_guild(self, guild_id_int: int) -> bool:
         """
