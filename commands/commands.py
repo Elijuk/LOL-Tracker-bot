@@ -1,8 +1,7 @@
 # ========== Imports ==========
 import discord
 
-from discord import app_commands
-from riot import get_puuid, get_match_id
+from riot.api import *
 
 
 # ========== Commands registry ==========
