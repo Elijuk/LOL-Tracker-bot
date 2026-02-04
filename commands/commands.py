@@ -31,7 +31,7 @@ def register_commands(tree):
         await interaction.edit_original_response(content=f"Your latest match ID: {match_id}")
         return
 
-    @tree.command(name="add_user", description="Adds a user to the list ~admin-only")
+    @tree.command(name="add_user", description="Adds a user to the list ~dev-only")
     async def add_user(interaction: discord.Interaction, discord_user: discord.User, riot_name: str, region: str):
         if '#' not in riot_name:
             await interaction.response.send_message(content="Invalid Riot name. Please include the tagline (#).", ephemeral=True)
@@ -78,6 +78,30 @@ def register_commands(tree):
 
         track.save()
 
-        await interaction.response.send_message("Het werkt bitch", ephemeral=True)
+        await interaction.response.send_message("User has been successfully added", ephemeral=True)
+    
+    @tree.command(name="remove_user", description="removes a user to the list ~dev-only")
+    async def remove_user(interaction: discord.Interaction, discord_user: discord.User,):
+        guild_id = interaction.guild_id
+
+        if guild_id is None:
+            await interaction.response.send_message(content="Unexpected error, couldn't fetch the guild_id", ephemeral=True)
+            return
+
+        guild = track.get_guild(guild_id)
+        
+        if guild is None:
+            await interaction.response.send_message(content="Unexpected error, couldn't fetch the guild", ephemeral=True)
+            return
+        
+        if not guild.remove_member(discord_user.id):
+            await interaction.response.send_message("User either does not exist in the database or couldn't be removed", ephemeral=True)
+            return
+        
+        track.save()
+        await interaction.response.send_message("User has been successfully removed", ephemeral=True)
+
+        
+
 
 
