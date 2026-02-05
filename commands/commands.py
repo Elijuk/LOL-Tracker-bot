@@ -1,49 +1,25 @@
 # ========== Imports ==========
-import os
-import dotenv
+from discord import app_commands
 import discord
 
 from helpers.riot_helpers import validate_region, get_puuid_and_match_id
-from helpers.discord_helpers import get_guild_from_interaction, track
-from services.match_service import generate_image
+from helpers.discord_helpers import validate_user, get_guild_from_interaction
+from track_manager.track_data import TrackManager
 
-
-dotenv.load_dotenv()
-
-DEV_TOKEN = os.getenv("DEV_TOKEN")
-if DEV_TOKEN:
-    DEV_TOKEN_LIST = DEV_TOKEN.split(",")
-else:
-    print("ERROR: Enviroment variable for DEV_TOKEN is not properly set")
-    DEV_TOKEN_LIST = []
+from commands.embeds import *
 
 # ========== Command Registry ==========
-def register_commands(tree):
-    # test command
-    @tree.command(name="view_latest_match", description="Elias houdt uw bakkes")
-    async def latest_match(interaction: discord.Interaction):
-        if interaction.guild_id is None:
-            return
-        
-        image, error_message = await generate_image(interaction.user.id, interaction.guild_id, track, "overview")
-        if error_message:
-            await interaction.response.send_message(error_message)
-            return
-        
-        if image:
-            await interaction.response.send_message(file=image)
-        else:
-            await interaction.response.send_message("Bro het werkt niet.")
+def register_commands(tree, track: TrackManager):
 
-
-    # add and remove user
     @tree.command(name="add_user", description="Adds a user to the list ~dev-only")
+    @app_commands.check(validate_user)
     async def add_user(
         interaction: discord.Interaction,
         discord_user: discord.User,
         riot_name: str,
         region: str,
     ):
+
         region = region.upper()
         if not validate_region(region):
             await interaction.response.send_message("Invalid region.", ephemeral=True)
@@ -51,17 +27,17 @@ def register_commands(tree):
             
         puuid, match_id = await get_puuid_and_match_id(riot_name, region)
         if not puuid or not match_id:
-            await interaction.response.send_message("Invalid Riot name or failed to fetch player data.",ephemeral=True)
+            await interaction.response.send_message("Invalid Riot name or failed to fetch player data.", ephemeral=True)
             return
 
-        guild = get_guild_from_interaction(interaction)
+        guild = get_guild_from_interaction(interaction, track)
         if not guild:
-            await interaction.response.send_message("This command must be used in a server.",ephemeral=True)
+            await interaction.response.send_message("This command must be used in a server.", ephemeral=True)
             return
 
         user = guild.add_member(discord_user.id, puuid, region)
         if not user:
-            await interaction.response.send_message(f"User {discord_user.id} already exists.",ephemeral=True)
+            await interaction.response.send_message(f"User {discord_user.id} already exists.", ephemeral=True)
             return
 
         user.puuid = puuid
@@ -72,15 +48,13 @@ def register_commands(tree):
 
 
     @tree.command(name="remove_user", description="Removes a user from the list ~dev-only")
+    @app_commands.check(validate_user)
     async def remove_user(
         interaction: discord.Interaction,
         discord_user: discord.User,
     ):
-        if not str(discord_user.id) in DEV_TOKEN_LIST:
-            await interaction.response.send_message("You're not authorized to use this feature.", ephemeral=True)
-            return
 
-        guild = get_guild_from_interaction(interaction)
+        guild = get_guild_from_interaction(interaction, track)
         if not guild:
             await interaction.response.send_message("Guild does not exist.", ephemeral=True)
             return
@@ -91,3 +65,16 @@ def register_commands(tree):
 
         track.save()
         await interaction.response.send_message("User has been successfully removed.", ephemeral=True,)
+
+    @tree.command(name="show_all_users", description="Shows all added users in the guild")
+    @app_commands.check(validate_user)
+    async def show_all_users(interaction: discord.Interaction):
+        guild = get_guild_from_interaction(interaction, track)
+        if not guild:
+            await interaction.response.send_message("Guild does not exist.", ephemeral=True)
+            return
+
+        user_list = guild.get_all_members()
+        
+        await interaction.response.send_message(embed= await All_User_embed(interaction, int(guild.guild_id), user_list))
+
