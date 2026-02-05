@@ -92,7 +92,7 @@ class Guild:
         self._id = guild_id
         self._data = guild_data
 
-    def get_member(self, discord_id: int) -> Optional['User']:
+    def get_member(self, discord_id: int) -> Optional[User]:
         """
         Gets the member from the guild with a specified id.
 
@@ -162,7 +162,7 @@ class Guild:
 
         return False
     
-    def get_all_members(self) -> list['User']:
+    def get_all_members(self) -> list[User]:
         """
         Get a list of all members in the guild.
 
@@ -197,7 +197,7 @@ class TrackManager:
         self._filepath = FILE
         self._data = self._load()
 
-    def _load(self) -> dict | None:
+    def _load(self) -> Optional[dict]:
         """
         Loads the content in the json file
 
@@ -229,7 +229,7 @@ class TrackManager:
             return None
     
 
-    def get_guild(self, guild_id_int: int) -> Guild | None:
+    def get_guild(self, guild_id_int: int) -> Optional[Guild]:
         """
         Gets the json content from a specific guild
 
@@ -257,7 +257,7 @@ class TrackManager:
 
         return Guild(guild_id_str, guild_map[guild_id_str])
     
-    def add_guild(self, guid_id_int: int) -> Guild | None:
+    def add_guild(self, guid_id_int: int) -> Optional[Guild]:
         """
         Adds a new guild to the json and returns the guild you added
 
