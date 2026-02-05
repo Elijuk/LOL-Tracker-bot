@@ -9,11 +9,12 @@ from io import BytesIO
 
 def generate_overview_image():
     current_folder = os.path.dirname(__file__)
-    image_path = os.path.join(current_folder, "d1b11d5e4dbae547ac0d651476cec488.jpg")
+    image_path = os.path.join(current_folder, "assets/templates/overview design.png")
 
     img = Image.open(image_path)
     buffer = BytesIO()
-    img.save(buffer, format="jpeg")
+    img.save(buffer, format="png")
     buffer.seek(0)
     return buffer
 
+generate_overview_image()

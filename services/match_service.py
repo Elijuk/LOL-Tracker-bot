@@ -13,7 +13,7 @@ from track_manager.track_data import TrackManager
 # ========== Function ==========
 async def generate_image(
         discord_id: int,
-        guild_id: Optional[int],
+        guild_id: int,
         tracker: TrackManager,
         image_type: str
 ) -> Optional[discord.File]:
@@ -32,11 +32,10 @@ async def generate_image(
     
 
     # 3. DATA LAYER
-    match_id = await get_match_id(user.puuid, user.region)
-    if not match_id or match_id in user.matches:
-        return None
+    if user.recent_match is None:
+        return
     
-    match_data = await get_match_data(match_id, user.region)
+    match_data = await get_match_data(user.recent_match, user.region)
     if not match_data:
         return None
     
@@ -44,6 +43,6 @@ async def generate_image(
     # We always need to generate an overview
     if image_type == "overview":
         image_buffer = generate_overview_image()
-        discord_file = discord.File(fp=image_buffer, filename=f"overview_{match_id}.png")
+        discord_file = discord.File(fp=image_buffer, filename=f"overview_{user.recent_match}.png")
         return discord_file
 

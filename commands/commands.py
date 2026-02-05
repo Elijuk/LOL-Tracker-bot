@@ -5,12 +5,13 @@ import discord
 
 from helpers.riot_helpers import validate_region, get_puuid_and_match_id
 from helpers.discord_helpers import get_guild_from_interaction, track
+from services.match_service import generate_image
 
 
 dotenv.load_dotenv()
 
 DEV_TOKEN = os.getenv("DEV_TOKEN")
-if not DEV_TOKEN is None:
+if DEV_TOKEN:
     DEV_TOKEN_LIST = DEV_TOKEN.split(",")
 else:
     print("ERROR: Enviroment variable for DEV_TOKEN is not properly set")
@@ -18,6 +19,20 @@ else:
 
 # ========== Command Registry ==========
 def register_commands(tree):
+    # test command
+    @tree.command(name="view_latest_match", description="Elias houdt uw bakkes")
+    async def latest_match(interaction: discord.Interaction):
+        if interaction.guild_id is None:
+            return
+        
+        image = await generate_image(interaction.user.id, interaction.guild_id, track, "overview")
+        if image:
+            await interaction.response.send_message(file=image)
+        else:
+            await interaction.response.send_message("Bro het werkt niet.")
+
+
+    # add and remove user
     @tree.command(name="add_user", description="Adds a user to the list ~dev-only")
     async def add_user(
         interaction: discord.Interaction,
@@ -25,10 +40,6 @@ def register_commands(tree):
         riot_name: str,
         region: str,
     ):
-        if not str(discord_user.id) in DEV_TOKEN_LIST:
-            await interaction.response.send_message("You're not authorized to use this feature.", ephemeral=True)
-            return
-
         region = region.upper()
         if not validate_region(region):
             await interaction.response.send_message("Invalid region.", ephemeral=True)
