@@ -3,7 +3,7 @@ import os
 import discord
 from track_manager.track_data import *
 
-DEV_TOKEN = os.getenv("DEV_TOKEN")
+DEV_IDS = {int(discord_id) for discord_id in os.getenv("DEV_IDS", "").split(",")}
 
 
 # ========== Functions ==========
@@ -14,8 +14,8 @@ def get_guild_from_interaction(interaction: discord.Interaction, track: TrackMan
         return None
     return track.get_guild(interaction.guild_id)
 
-def validate_user(interaction: discord.Interaction) -> bool:
+async def validate_user(interaction: discord.Interaction) -> bool:
     """Checks if the user is allowed to use the following command, this means its part of the env file"""
-    if DEV_TOKEN:
-        return str(interaction.user.id) in DEV_TOKEN
-    return False
+    if not DEV_IDS:
+        return False
+    return interaction.user.id in DEV_IDS
