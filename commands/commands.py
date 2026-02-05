@@ -69,7 +69,7 @@ def register_commands(tree, track: TrackManager):
     @tree.command(name="show_all_users", description="Shows all added users in the guild")
     @app_commands.check(validate_user)
     async def show_all_users(interaction: discord.Interaction):
-        guild = get_guild_from_interaction(interaction)
+        guild = get_guild_from_interaction(interaction, track)
         if not guild:
             await interaction.response.send_message("Guild does not exist.", ephemeral=True)
             return

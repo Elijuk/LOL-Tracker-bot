@@ -1,6 +1,6 @@
 import discord
 
-from track_manager.track_data import User, Guild
+from track_manager.track_data import User
 
 async def All_User_embed(interaction: discord.Interaction, guild_id: int, user_list: list[User]):
     text = ""
