@@ -18,7 +18,8 @@ def get_guild_from_interaction(interaction: discord.Interaction) -> Optional[Gui
         return None
     return track.get_guild(interaction.guild_id)
 
-def validate_user(interaction: discord.Interaction):
+def validate_user(interaction: discord.Interaction) -> bool:
+    """Checks if the user is allowed to use the following command, this means its part of the env file"""
     if DEV_TOKEN:
         return str(interaction.user.id) in DEV_TOKEN
     return False
