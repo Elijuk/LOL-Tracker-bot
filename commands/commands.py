@@ -25,7 +25,11 @@ def register_commands(tree):
         if interaction.guild_id is None:
             return
         
-        image = await generate_image(interaction.user.id, interaction.guild_id, track, "overview")
+        image, error_message = await generate_image(interaction.user.id, interaction.guild_id, track, "overview")
+        if error_message:
+            await interaction.response.send_message(error_message)
+            return
+        
         if image:
             await interaction.response.send_message(file=image)
         else:
