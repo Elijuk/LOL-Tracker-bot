@@ -1,33 +1,20 @@
 # ========== Imports ==========
-import os
-import dotenv
-import discord
+from discord import app_commands
 
 from helpers.riot_helpers import validate_region, get_puuid_and_match_id
-from helpers.discord_helpers import get_guild_from_interaction, track
-
-
-dotenv.load_dotenv()
-
-DEV_TOKEN = os.getenv("DEV_TOKEN")
-if not DEV_TOKEN is None:
-    DEV_TOKEN_LIST = DEV_TOKEN.split(",")
-else:
-    print("ERROR: Enviroment variable for DEV_TOKEN is not properly set")
-    DEV_TOKEN_LIST = []
+from helpers.discord_helpers import *
 
 # ========== Command Registry ==========
 def register_commands(tree):
+
     @tree.command(name="add_user", description="Adds a user to the list ~dev-only")
+    @app_commands.check(validate_user)
     async def add_user(
         interaction: discord.Interaction,
         discord_user: discord.User,
         riot_name: str,
         region: str,
     ):
-        if not str(discord_user.id) in DEV_TOKEN_LIST:
-            await interaction.response.send_message("You're not authorized to use this feature.", ephemeral=True)
-            return
 
         region = region.upper()
         if not validate_region(region):
@@ -57,13 +44,11 @@ def register_commands(tree):
 
 
     @tree.command(name="remove_user", description="Removes a user from the list ~dev-only")
+    @app_commands.check(validate_user)
     async def remove_user(
         interaction: discord.Interaction,
         discord_user: discord.User,
     ):
-        if not str(discord_user.id) in DEV_TOKEN_LIST:
-            await interaction.response.send_message("You're not authorized to use this feature.", ephemeral=True)
-            return
 
         guild = get_guild_from_interaction(interaction)
         if not guild:
