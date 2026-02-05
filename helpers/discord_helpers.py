@@ -1,7 +1,9 @@
 # ========== Imports ==========
 import os
 import discord
-from track_manager.track_data import *
+
+from track_manager.track_data import TrackManager, Guild
+from typing import Optional
 
 DEV_IDS = {int(discord_id) for discord_id in os.getenv("DEV_IDS", "").split(",")}
 

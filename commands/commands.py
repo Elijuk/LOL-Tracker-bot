@@ -1,8 +1,10 @@
 # ========== Imports ==========
 from discord import app_commands
+import discord
 
 from helpers.riot_helpers import validate_region, get_puuid_and_match_id
-from helpers.discord_helpers import *
+from helpers.discord_helpers import validate_user, get_guild_from_interaction
+from track_manager.track_data import TrackManager
 
 # ========== Command Registry ==========
 def register_commands(tree, track: TrackManager):
