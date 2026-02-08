@@ -3,7 +3,7 @@ import discord
 from tracking import models
 
 
-# ========== Functions6 ==========
+# ========== Functions ==========
 async def show_tracking_info(
         interaction: discord.Interaction,
         tracked_users_list: list[models.User],

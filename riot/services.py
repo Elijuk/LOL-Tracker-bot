@@ -11,7 +11,6 @@ def split_riot_name(riot_name: str) -> Optional[Tuple[str, str]]:
     if "#" not in riot_name:
         return None
 
-    # split only once in case the name contains additional '#'
     game_name, tag = riot_name.split("#", 1)
     return game_name, tag
 

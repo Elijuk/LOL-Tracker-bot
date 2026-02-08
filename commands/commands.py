@@ -72,7 +72,7 @@ def register_commands(
             return
 
         track.save()
-        await interaction.response.send_message("User has been successfully removed.", ephemeral=True,)
+        await interaction.response.send_message("User has been successfully removed.", ephemeral=True)
 
     @tree.command(name="show_all_users", description="Shows all added users in the guild")
     @app_commands.check(validate_user)
