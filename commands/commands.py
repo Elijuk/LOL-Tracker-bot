@@ -5,16 +5,19 @@ from discord import app_commands
 from typing import Optional
 from aiohttp import ClientSession
 
+from riot.api import get_match_data
 from riot.services import validate_region, get_puuid_and_match_id
 from utils.discord import validate_user, get_guild_from_interaction
 from tracking.storage import TrackManager
+
 from embeds.embeds import show_tracking_info
+from services.match_service import generate_image
 
 # ========== Command Registry ==========
 def register_commands(
         tree: discord.app_commands.CommandTree,
         track: TrackManager,
-        http_session: Optional[ClientSession]):
+        http_session: ClientSession):
 
     @tree.command(name="add_user", description="Adds a user to the list ~dev-only")
     @app_commands.check(validate_user)
@@ -24,10 +27,6 @@ def register_commands(
         riot_name: str,
         region: str,
     ):
-        if http_session is None:
-            await interaction.response.send_message("Bot is not ready yet.", ephemeral=True)
-            return
-        
         region = region.upper()
         if not validate_region(region):
             await interaction.response.send_message("Invalid region.", ephemeral=True)
@@ -86,4 +85,37 @@ def register_commands(
         embed = await show_tracking_info(interaction, user_list)
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
+    
+    @tree.command(name="recent-match", description="Shows a recap of the most recent match a tracked user has played.")
+    async def recent_match(
+        interaction: discord.Interaction,
+        discord_user: discord.User,
+    ):
+        guild = get_guild_from_interaction(interaction, track)
+        if not guild:
+            await interaction.response.send_message("This Discord server isn't being tracked.")
+            return
+
+        tracked_user = guild.get_member(discord_user.id)
+        if not tracked_user:
+            await interaction.response.send_message("This user isn't being tracked. Add them by doing /add_user.")
+            return
+        
+        if not tracked_user.recent_match:
+            await interaction.response.send_message("This user has not played any matches.")
+            return
+
+        match_data = await get_match_data(tracked_user.recent_match, tracked_user.region, http_session)
+        if not match_data:
+            await interaction.response.send_message("Something went wrong while fetching data. Ask Shive to check the server's terminal for a fix.")
+            return
+
+        image = await generate_image("overview", tracked_user, match_data)
+        if not image:
+            await interaction.response.send_message("Something went wrong while generating the image.")
+            return
+        
+        await interaction.response.send_message(file=image)
+        
+
 
