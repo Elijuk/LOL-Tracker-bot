@@ -8,7 +8,7 @@ from discord import app_commands
 from commands.commands import register_commands
 from commands.errors import register_errors
 
-from track_manager.track_data import TrackManager
+from tracking.storage import TrackManager
 track = TrackManager()
 
 # ========== Setup ==========
