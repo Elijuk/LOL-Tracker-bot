@@ -2,12 +2,13 @@
 import os
 import dotenv
 import discord
+import aiohttp
 
 from discord import app_commands
 from commands.commands import register_commands
 from commands.errors import register_errors
 
-from track_manager.track_data import TrackManager
+from tracking.storage import TrackManager
 track = TrackManager()
 
 # ========== Setup ==========
@@ -17,9 +18,9 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
+http_session: aiohttp.ClientSession | None = None
+
 tree = app_commands.CommandTree(client)
-register_commands(tree, track)
-register_errors(tree)
 
 
 # ========== Startup ==========
@@ -31,6 +32,14 @@ if token is None:
 async def on_ready():
     print(f"Logged in as {client.user}")
 
+    # open http_session
+    global http_session
+    if http_session is None:
+        http_session = aiohttp.ClientSession()
+
+    register_commands(tree, track, http_session)
+    register_errors(tree)
+    
     # sync with test server
     MY_GUILD = discord.Object(id=1461904966212911297)
     tree.copy_global_to(guild=MY_GUILD)
@@ -38,9 +47,8 @@ async def on_ready():
 
     # sync all joined guilds
     async for guild in client.fetch_guilds():
-        if not track.get_guild(guild.id):
-            track.add_guild(guild.id)
-            track.save()
+        track.add_guild(guild.id)
+    track.save()
 
 
 @client.event
@@ -53,4 +61,10 @@ async def on_guild_remove(guild: discord.Guild):
     track.remove_guild(guild.id)
     track.save()
 
-client.run(token)
+@client.event
+async def on_disconnect():
+    if http_session:
+        await http_session.close()
+
+if __name__ == "__main__":
+    client.run(token)
