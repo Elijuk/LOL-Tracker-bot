@@ -20,7 +20,6 @@ VERSION = "16.3.1"
 """TODO: fix linux"""
 
 async def _fetch_image(url_to_fetch: str) -> Optional[BytesIO]:
-    """Asynchronously fetches an image from a URL without blocking the event loop."""
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url_to_fetch) as response:
@@ -28,6 +27,7 @@ async def _fetch_image(url_to_fetch: str) -> Optional[BytesIO]:
                     content = await response.read()
                     return BytesIO(content)
         return None
+    
     except Exception as e:
         print(f"Error fetching image from {url_to_fetch}: {e}")
         return None

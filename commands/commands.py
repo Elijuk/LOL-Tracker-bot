@@ -128,5 +128,6 @@ def register_commands(
             return
         
         await channel.send(file=image)
+        await interaction.edit_original_response(content="Sent!")
 
         
