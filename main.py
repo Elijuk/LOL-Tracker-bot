@@ -1,3 +1,11 @@
+"""
+LoL Tracker for Discord
+Originally created by xShive (2026)
+
+This project is licensed under the MIT License.
+"""
+
+
 # ========== Imports ==========
 import os
 import dotenv
