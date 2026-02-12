@@ -50,7 +50,7 @@ def draw_text_with_shadow(
 async def generate_overview_image(tracked_user: User, match_data: MatchData, session: aiohttp.ClientSession):
     # 0. Folder setup
     current_folder = os.path.dirname(__file__)
-    template_path = os.path.join(current_folder, "assets/templates/overview design v2.png")
+    template_path = os.path.join(current_folder, "assets/templates/overview design.png")
     font_path_name = os.path.join(current_folder, "assets/fonts/Sora/Sora-SemiBold.ttf")
     font_path_rank = os.path.join(current_folder, "assets/fonts/Sora/Sora-Medium.ttf")
 
@@ -96,12 +96,10 @@ async def generate_overview_image(tracked_user: User, match_data: MatchData, ses
     for i, participant in enumerate(participants):
         solo_rank, flex_rank, status = await get_both_ranks_for_puuid(participant["puuid"], tracked_user.region, session)
 
-        # Row offsets
-        row_offset = (i if i < 5 else i - 5) * 190
+        # Check which side
         is_right = i >= 5
 
-
-        # --- Prepare texts and images ---
+        # Prepare text and images
         if status == "unfetchable":
             solo_text = flex_text = "Not Fetchable"
             rank_img_solo = rank_img_flex = None
@@ -136,7 +134,7 @@ async def generate_overview_image(tracked_user: User, match_data: MatchData, ses
             if rank_img_solo:
                 icon_resized = rank_img_solo.resize((128, 72))
                 template.paste(icon_resized, (140, 140 + i * 190), icon_resized)
-                draw_text_with_shadow(draw, (218, 168 + i * 190), solo_text, rank_font)
+                draw_text_with_shadow(draw, (220, 168 + i * 190), solo_text, rank_font)
 
             # Else Unranked / Unfetchable
             else:
@@ -145,12 +143,31 @@ async def generate_overview_image(tracked_user: User, match_data: MatchData, ses
             if rank_img_flex:
                 icon_resized = rank_img_flex.resize((128, 72))
                 template.paste(icon_resized, (140, 160 + i * 190), icon_resized)
-                draw_text_with_shadow(draw, (218, 188 + i * 190), flex_text, rank_font)
+                draw_text_with_shadow(draw, (220, 188 + i * 190), flex_text, rank_font)
 
             else:
                 draw_text_with_shadow(draw, (192, 188 + i * 190), flex_text, rank_font)
+        
+        else:
+            row = (i - 5) * 190     # reset index
 
+            # If user has rank
+            if rank_img_solo:
+                icon_resized = rank_img_solo.resize((128, 72))
+                template.paste(icon_resized, (1652, 140 + row), icon_resized)
+                draw_text_with_shadow(draw, (1698, 168 + row), solo_text, rank_font, anchor="ra")
 
+            # Else Unranked / Unfetchable
+            else:
+                draw_text_with_shadow(draw, (1728, 168 + row), solo_text, rank_font, anchor="ra")
+                
+            if rank_img_flex:
+                icon_resized = rank_img_flex.resize((128, 72))
+                template.paste(icon_resized, (1652, 160 + row), icon_resized)
+                draw_text_with_shadow(draw, (1698, 188 + row), flex_text, rank_font, anchor="ra")
+
+            else:
+                draw_text_with_shadow(draw, (1728, 188 + row), flex_text, rank_font, anchor="ra")
 
             
             
