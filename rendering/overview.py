@@ -19,34 +19,6 @@ rank_labels = {
 
 
 # ========== Functions ==========
-def _crop_to_circle(img: Image.Image) -> Image.Image:
-    img = img.resize((80, 80))
-    mask = Image.new("L", (80, 80), 0)
-    draw = ImageDraw.Draw(mask)
-    draw.ellipse((10, 10, 70, 70), fill=255)
-    img.putalpha(mask)
-    return img
-
-def draw_text_with_shadow(
-    draw: ImageDraw.ImageDraw,
-    position: tuple[int, int],
-    text: str,
-    font: ImageFont.FreeTypeFont,
-    fill=(255, 255, 255, 255),
-    shadow_color=(0, 0, 0, 180),
-    offset=2,
-    anchor="la"
-):
-    x, y = position
-
-    # Shadow
-    draw.text((x + offset, y + offset), text, font=font, fill=shadow_color, anchor=anchor)
-
-    # Main text
-    draw.text((x, y), text, font=font, fill=fill, anchor=anchor)
-
-
-
 async def generate_overview_image(tracked_user: User, match_data: MatchData, session: aiohttp.ClientSession):
     # 0. Folder setup
     current_folder = os.path.dirname(__file__)

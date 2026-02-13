@@ -2,9 +2,10 @@
 # ========== Imports ==========
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Tuple
 
 import aiohttp
+import asyncio
 from PIL import Image
 
 from .constants import (
@@ -120,7 +121,7 @@ class AssetCache:
             return self._perk_lookup
         
         try:
-            async with session.get(SPELL_DATA_URL) as response:
+            async with session.get(PERK_DATA_URL) as response:
                 if response.status != 200:
                     print(f"Failed to fetch perk/rune data: {response.status}")
                     return {}
@@ -223,3 +224,33 @@ async def get_image(
     except Exception as e:
         print(f"Error opening image: {e}")
         return None
+
+async def get_multiple_images(
+        items: List[Tuple[str | int, str]],
+        session: aiohttp.ClientSession,
+        cache: Optional[AssetCache]
+) -> list[Optional[Image.Image]]:
+    """
+    Fetch multiple images in parallel.
+    
+    Args:
+        items: List of (identity, category) tuples
+        session: aiohttp session
+        cache: AssetCache instance
+    
+    Returns:
+        List of Image objects (or None for failed fetches)
+    
+    Example:
+        >>> images = await get_images_batch([
+        ...     ("Ahri", "champion"),
+        ...     ("Zed", "champion"),
+        ...     (4, "spell")
+        ... ], session, cache)
+    """
+    if cache is None:
+        cache = AssetCache()
+    
+    # get_image has no await yet, so it hasn't ran. asyncio.gather does them all.
+    tasks = [get_image(identity, category, session, cache) for identity, category in items]
+    return await asyncio.gather(*tasks, return_exceptions=False)

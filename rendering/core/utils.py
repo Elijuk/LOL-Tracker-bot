@@ -6,7 +6,7 @@ Contains shared helper function across multiple rendering components"""
 from PIL import Image, ImageDraw, ImageFont
 from typing import Tuple
 
-from .constants import ImageSizes, Colors
+from .constants import ImageSizes, COLORS
 
 
 # ========== Imports ==========
@@ -39,8 +39,8 @@ def draw_text_with_shadow(
     position: Tuple[int, int],
     text: str,
     font: ImageFont.FreeTypeFont,
-    fill: Tuple[int, int, int, int] = Colors.WHITE,
-    shadow_color: Tuple[int, int, int, int] = Colors.SHADOW,
+    fill: Tuple[int, int, int, int] = COLORS["WHITE"],
+    shadow_color: Tuple[int, int, int, int] = COLORS["SHADOW"],
     offset: int = 2,
     anchor: str = "la"
 ) -> None:
@@ -52,7 +52,7 @@ def draw_text_with_shadow(
         position: (x, y) coordinates
         text: Text to draw
         font: Font to use
-        fill: Main text color (RGBA)
+        fill: Main text color (RGBA), defaults to white.
         shadow_color: Shadow color (RGBA)
         offset: Pixel offset for shadow
         anchor: Text anchor point ("la" or "ra", default "la")
