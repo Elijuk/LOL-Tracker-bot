@@ -67,7 +67,7 @@ def get_both_ranks(
 ) -> Tuple[Optional[RankData], Optional[RankData]]:
     """Extracts both Solo and Flex ranks from a list of RankData in a single pass.
     
-    Returns a tuple of (solo_rank, flex_rank). Each can be None if not found.
+    Returns a tuple of (solo_rank, flex_rank). Each can be None if not ranked.
     """
     solo_rank = None
     flex_rank = None
