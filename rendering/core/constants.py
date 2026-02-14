@@ -26,10 +26,6 @@ TEMPLATES_DIR = RENDERING_ROOT_DIR / "assets" / "templates"
 FONTS_DIR = RENDERING_ROOT_DIR / "assets" / "fonts"
 
 
-# ========== File Paths ==========
-OVERVIEW_TEMPLATE = Image.open(TEMPLATES_DIR / "overview.png").convert("RGBA")
-
-
 # ========== Fonts ==========
 NAME_FONT = ImageFont.truetype(str(FONTS_DIR / "Sora" / "Sora-SemiBold.ttf"), 18)
 RANK_FONT = ImageFont.truetype(str(FONTS_DIR / "Sora" / "Sora-Medium.ttf"), 12)
@@ -56,7 +52,7 @@ STYLE_ICON_MAP = {
 
 COLORS = {
     "IRON": (75, 75, 75, 255),
-    "BRONZE": (139, 69, 19, 255),
+    "BRONZE": (200, 136, 73, 255),
     "SILVER": (192, 192, 192, 255),
     "GOLD": (255, 215, 0, 255),
     "PLATINUM": (37, 150, 190, 255),

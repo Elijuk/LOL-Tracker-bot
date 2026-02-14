@@ -188,7 +188,7 @@ async def get_rank_data(
     """
     platform_url = PLATFORM_ROUTING.get(region)
     if not platform_url:
-        return [], "error"
+        return [], "Error"
 
     full_url = f"{platform_url}/lol/league/v4/entries/by-puuid/{puuid}"
 
@@ -198,8 +198,8 @@ async def get_rank_data(
             return data or [], "ok"
         
         elif response.status == 403:
-            return [], "unfetchable"
+            return [], "Unfetchable"
         
         else:
             print(f"Error: {response.status}")
-            return [], "error"
+            return [], "Error"

@@ -2,11 +2,12 @@ from typing import Optional, Tuple
 import aiohttp
 from PIL import Image, ImageDraw, ImageFont
 
-from rendering.core.cache_manager import AssetCache, get_image, get_multiple_images
+from rendering.core.cache_manager import AssetCache, get_image
 from rendering.core.constants import RANK_LABELS, ImageSizes, COLORS
 from rendering.core.utils import draw_text_with_shadow
+from riot.riot_types import RankData
 
-def format_rank_text(rank_data: dict) -> str:
+def format_rank_text(rank_data: RankData) -> str:
     """
     Format rank data into display text.
     
@@ -28,7 +29,7 @@ def format_rank_text(rank_data: dict) -> str:
 
 async def draw_rank_badge(
     template: Image.Image,
-    rank_data: Optional[dict],
+    rank_data: RankData,
     x: int,
     y: int,
     session: aiohttp.ClientSession,
@@ -40,7 +41,7 @@ async def draw_rank_badge(
     
     Args:
         template: Image to draw on
-        rank_data: Rank dictionary or None for unranked
+        rank_data: Rank dictionary
         x: X position (top-left corner)
         y: Y position (top-left corner)
         session: aiohttp session
@@ -50,9 +51,6 @@ async def draw_rank_badge(
     Returns:
         True if badge was drawn, False if unranked or error
     """
-    if not rank_data:
-        return False
-    
     tier = rank_data.get("tier", "").lower()
     if not tier:
         return False
@@ -70,7 +68,7 @@ async def draw_rank_badge(
 
 def draw_rank_text(
     draw: ImageDraw.ImageDraw,
-    rank_data: Optional[dict],
+    rank_data: RankData,
     x: int,
     y: int,
     font: ImageFont.FreeTypeFont,
@@ -82,7 +80,7 @@ def draw_rank_text(
     
     Args:
         draw: ImageDraw object
-        rank_data: Rank dictionary or None
+        rank_data: Rank dictionary
         x: X position
         y: Y position
         font: Font to use
@@ -102,7 +100,7 @@ def draw_rank_text(
 async def draw_rank_badge_with_text(
     template: Image.Image,
     draw: ImageDraw.ImageDraw,
-    rank_data: Optional[dict],
+    rank_data: RankData,
     badge_x: int,
     badge_y: int,
     text_x: int,
@@ -119,7 +117,7 @@ async def draw_rank_badge_with_text(
     Args:
         template: Image to draw on
         draw: ImageDraw object
-        rank_data: Rank dictionary or None
+        rank_data: Rank dictionary
         badge_x: Badge X position
         badge_y: Badge Y position
         text_x: Text X position

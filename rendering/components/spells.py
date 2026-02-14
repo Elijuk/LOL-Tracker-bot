@@ -107,7 +107,7 @@ async def draw_spell_pairs_batch(
         spell2_success = False
         if spell2_img:
             spell2_img = spell2_img.resize((size, size))
-            template.paste(spell2_img, (x + gap, y), spell2_img)
+            template.paste(spell2_img, (x + size + gap, y), spell2_img)
             spell2_success = True
         
         results.append((spell1_success, spell2_success))

@@ -1,7 +1,5 @@
-
 # ========== Imports ==========
 from io import BytesIO
-from pathlib import Path
 from typing import Optional, List, Tuple
 
 import aiohttp
@@ -9,7 +7,6 @@ import asyncio
 from PIL import Image
 
 from .constants import (
-    CACHE_DIR,
     DRAGON_URL,
     RANK_ICON_URL,
     PERK_DATA_URL,
@@ -22,63 +19,55 @@ from .constants import (
 
 # ========== Class ==========
 class AssetCache:
-    def __init__(self, cache_dir: Path = CACHE_DIR):
-        """
-        Initialize asset cache.
-        
-        Args:
-            cache_dir: Directory to store cached images
-        """
-        self.cache_dir = cache_dir
-        self._perk_lookup: Optional[dict[int, str]] = None
-        self._spell_lookup: Optional[dict[int, str]] = None
-        self._ensure_cache_dirs()
+    """
+    Asset cache with RAM storage.
+    All instances share the same cache.
+    """
     
-    def _ensure_cache_dirs(self) -> None:
-        for category in ["champion", "item", "rune", "spell"]:
-            (self.cache_dir / f"{category}_icons").mkdir(parents=True, exist_ok=True)
+    # Class attributes, so that cache is stored across all instances of AssetCache
+    _image_cache: dict[str, Image.Image] = {}
+    _perk_lookup: Optional[dict[int, str]] = None
+    _spell_lookup: Optional[dict[int, str]] = None
     
     def get_cached_image(self, identity: str | int, category: str) -> Optional[Image.Image]:
         """
-        Check if an image exists in cache and returns it.
+        Get image from RAM cache (shared across all instances).
         
         Args:
             identity: Champion name, item ID, etc.
-            category: Asset category (champion, item, rune, spell)
+            category: Asset category (champion, item, rune, spell, rank)
         
         Returns:
-            Cached image or None if not found
+            Cached image or None if not in cache.
         """
-        current_cache_path = self.cache_dir / f"{category}_icons" / f"{identity}.png"
-        if current_cache_path.exists():
-            try:
-                return Image.open(current_cache_path).convert("RGBA")
-            except Exception as e:
-                print(f"Error loading cached image {current_cache_path}: {e}")
-        return None
+        cache_key = f"{category}:{identity}"
+        return self._image_cache.get(cache_key)
     
     def save_to_cache(self, img: Image.Image, identity: str | int, category: str) -> None:
         """
-        Save an image to the cache.
+        Save image to RAM cache (shared across all instances).
         
         Args:
-            img: Image to save
-            identity: Champion name, item ID, ...
+            img: Image to cache
+            identity: Champion name, item ID, etc.
             category: Asset category
         """
-        saving_cache_path = self.cache_dir / f"{category}_icons" / f"{identity}.png"
+        cache_key = f"{category}:{identity}"
+        self._image_cache[cache_key] = img
+    
+    def get_cache_stats(self) -> Optional[dict[str, int | str]]:
+        """Get info about how much is stored in the current cache."""
+        if not self._image_cache:
+            return None
         
-        # Optimize by not wriring if exists
-        if not saving_cache_path.exists():
-            try:
-                img.save(saving_cache_path)
-            except Exception as e:
-                print(f"Error saving cached image to {saving_cache_path}: {e}")
+        return {
+            "images": len(self._image_cache)
+        }
     
 
     async def get_spell_map(self, session: aiohttp.ClientSession) -> dict[int, str]:
         """
-        Fetch spell data mapping.
+        Fetch spell data mapping (shared across all instances).
         
         Args:
             session: aiohttp session for requests
@@ -110,13 +99,13 @@ class AssetCache:
     
     async def get_rune_map(self, session: aiohttp.ClientSession) -> dict[int, str]:
         """
-        Fetch rune data mapping.
+        Fetch rune data mapping (shared across all instances).
         
         Args:
             session: aiohttp session for requests
         
         Returns:
-            Dictionary mapping rune IDs to spell names (used in the URL)
+            Dictionary mapping rune IDs to URLs
         """
         if self._perk_lookup is not None:
             return self._perk_lookup
@@ -133,11 +122,11 @@ class AssetCache:
 
         self._perk_lookup = {}
         
-        # building a dictionary where keys = ID's, values = Names
+        # building a dictionary where keys = ID's, values = URLs
         # build lookup dictionary (1. keystone rune icons)
         for rune in data:
             rune_id = rune["id"]
-            icon_path = rune["iconPath"].replace("/lol-game-data/assets", "").lower()   # remove  /lol-game-data/assets, C-Dragons doesn't need it
+            icon_path = rune["iconPath"].replace("/lol-game-data/assets", "").lower()
             self._perk_lookup[rune_id] = PERK_ICON_BASE + icon_path
         
         # build lookup dictionary (2. style icons (e.g. domination))
@@ -190,7 +179,6 @@ async def get_image(
         return cached
     
     original_identity = identity
-    print(f"Not cached: {identity, category}")
 
     if category == "rank":
         url = RANK_ICON_URL + f"{identity}.png"
@@ -203,7 +191,7 @@ async def get_image(
         
         url = lookup.get(int(identity))
         if not url:
-            print("Spell lookup went wrong")
+            print("Rune lookup went wrong")
             return None
         
     else:
