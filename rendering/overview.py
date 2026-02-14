@@ -1,7 +1,8 @@
 # ========== Imports ==========
 import os
+import asyncio
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import ImageDraw
 from io import BytesIO
 from rendering.components import ranks, champion, runes, spells
 from rendering.core.utils import draw_text_with_shadow
@@ -11,16 +12,13 @@ from riot.riot_types import MatchData
 from riot.services import get_both_ranks_for_puuid
 from tracking.models import User
 import aiohttp
-from rendering.core.constants import RANK_LABELS, FONTS_DIR, TEMPLATES_DIR
+from rendering.core.constants import RANK_FONT, NAME_FONT, OVERVIEW_TEMPLATE
 
 
 # ========== Functions ==========
 async def generate_overview_image(tracked_user: User, match_data: MatchData, session: aiohttp.ClientSession):
     # Setup
-    template = Image.open(TEMPLATES_DIR / "overview.png").convert("RGBA")
-    draw = ImageDraw.Draw(template)
-    name_font = ImageFont.truetype(str(FONTS_DIR / "Sora" / "Sora-SemiBold.ttf"), 18)
-    rank_font = ImageFont.truetype(str(FONTS_DIR / "Sora" / "Sora-Medium.ttf"), 12)
+    draw = ImageDraw.Draw(OVERVIEW_TEMPLATE)
     cache = AssetCache()
     
     participants = get_participants(match_data)
@@ -47,7 +45,7 @@ async def generate_overview_image(tracked_user: User, match_data: MatchData, ses
             draw,
             (name_x, name_y),
             participant["riotIdGameName"],
-            name_font,
+            NAME_FONT,
             anchor="ra" if is_right else "la"
         )
         
@@ -70,14 +68,23 @@ async def generate_overview_image(tracked_user: User, match_data: MatchData, ses
         spell_pairs.append((spell1_id, spell2_id, spell_x, spell_y))
     
     # DRAW EVERYTHING
-    await champion.draw_multiple_champions(template, champions_positions, session, cache)
-    await runes.draw_multiple_rune_pairs(template, rune_pairs, session, cache)
-    await spells.draw_spell_pairs_batch(template, spell_pairs, session, cache)
+    await asyncio.gather(
+    champion.draw_multiple_champions(OVERVIEW_TEMPLATE, champions_positions, session, cache),
+    runes.draw_multiple_rune_pairs(OVERVIEW_TEMPLATE, rune_pairs, session, cache),
+    spells.draw_spell_pairs_batch(OVERVIEW_TEMPLATE, spell_pairs, session, cache)
+    )
+
+    # Parallel rank fetching
+    rank_tasks = [
+        get_both_ranks_for_puuid(p["puuid"], tracked_user.region, session)
+        for p in participants
+    ]
+    all_ranks = await asyncio.gather(*rank_tasks)
     
-    # Seperate loop for ranks
-    for i, participant in enumerate(participants):
-        solo_rank, flex_rank, status = await get_both_ranks_for_puuid(participant["puuid"], tracked_user.region, session)
-        
+    # Parallel rank drawing
+    rank_badge_tasks = []
+    
+    for i, (participant, (solo_rank, flex_rank, status)) in enumerate(zip(participants, all_ranks)):
         is_right = i >= 5
         row = i - 5 if is_right else i
         
@@ -86,36 +93,39 @@ async def generate_overview_image(tracked_user: User, match_data: MatchData, ses
             error_text = "Not Fetchable" if status == "unfetchable" else "Error"
             text_x = 1728 if is_right else 192
             anchor = "ra" if is_right else "la"
-            draw_text_with_shadow(draw, (text_x, 168 + row * 190), error_text, rank_font, anchor=anchor)
-            draw_text_with_shadow(draw, (text_x, 188 + row * 190), error_text, rank_font, anchor=anchor)
-
+            draw_text_with_shadow(draw, (text_x, 168 + row * 190), error_text, RANK_FONT, anchor=anchor)
+            draw_text_with_shadow(draw, (text_x, 188 + row * 190), error_text, RANK_FONT, anchor=anchor)
         else:
-            # Draw using your rank component
+            # Collect rank drawing tasks
             if is_right:
-                await ranks.draw_rank_badge_with_text(
-                    template, draw, solo_rank,
+                rank_badge_tasks.append(ranks.draw_rank_badge_with_text(
+                    OVERVIEW_TEMPLATE, draw, solo_rank,
                     1652, 140 + row * 190, 1698, 168 + row * 190,
-                    session, cache, rank_font, "ra"
-                )
-                await ranks.draw_rank_badge_with_text(
-                    template, draw, flex_rank,
+                    session, cache, RANK_FONT, "ra"
+                ))
+                rank_badge_tasks.append(ranks.draw_rank_badge_with_text(
+                    OVERVIEW_TEMPLATE, draw, flex_rank,
                     1652, 160 + row * 190, 1698, 188 + row * 190,
-                    session, cache, rank_font, "ra"
-                )
+                    session, cache, RANK_FONT, "ra"
+                ))
             else:
-                await ranks.draw_rank_badge_with_text(
-                    template, draw, solo_rank,
+                rank_badge_tasks.append(ranks.draw_rank_badge_with_text(
+                    OVERVIEW_TEMPLATE, draw, solo_rank,
                     140, 140 + row * 190, 220, 168 + row * 190,
-                    session, cache, rank_font
-                )
-                await ranks.draw_rank_badge_with_text(
-                    template, draw, flex_rank,
+                    session, cache, RANK_FONT
+                ))
+                rank_badge_tasks.append(ranks.draw_rank_badge_with_text(
+                    OVERVIEW_TEMPLATE, draw, flex_rank,
                     140, 160 + row * 190, 220, 188 + row * 190,
-                    session, cache, rank_font
-                )
+                    session, cache, RANK_FONT
+                ))
+    
+    # Draw all rank badges in parallel
+    if rank_badge_tasks:
+        await asyncio.gather(*rank_badge_tasks)
     
     # Save
     buffer = BytesIO()
-    template.save(buffer, format="PNG")
+    OVERVIEW_TEMPLATE.save(buffer, format="PNG")
     buffer.seek(0)
     return buffer

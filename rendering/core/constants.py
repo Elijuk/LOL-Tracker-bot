@@ -7,6 +7,7 @@ used throughout the rendering system.
 
 # ========== Imports ==========
 from pathlib import Path
+from PIL import ImageFont, Image
 
 
 # ========== API & Asset URLs ==========
@@ -23,6 +24,15 @@ RENDERING_ROOT_DIR = Path(__file__).parent.parent   # current file parent = core
 CACHE_DIR = RENDERING_ROOT_DIR / "assets" / "cache"
 TEMPLATES_DIR = RENDERING_ROOT_DIR / "assets" / "templates"
 FONTS_DIR = RENDERING_ROOT_DIR / "assets" / "fonts"
+
+
+# ========== File Paths ==========
+OVERVIEW_TEMPLATE = Image.open(TEMPLATES_DIR / "overview.png").convert("RGBA")
+
+
+# ========== Fonts ==========
+NAME_FONT = ImageFont.truetype(str(FONTS_DIR / "Sora" / "Sora-SemiBold.ttf"), 18)
+RANK_FONT = ImageFont.truetype(str(FONTS_DIR / "Sora" / "Sora-Medium.ttf"), 12)
 
 
 # ========== Data Mappings ==========

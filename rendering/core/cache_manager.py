@@ -67,13 +67,13 @@ class AssetCache:
             category: Asset category
         """
         saving_cache_path = self.cache_dir / f"{category}_icons" / f"{identity}.png"
-        if saving_cache_path.exists():
-            print("EXISTS")
+        
+        # Optimize by not wriring if exists
+        if not saving_cache_path.exists():
             try:
                 img.save(saving_cache_path)
             except Exception as e:
                 print(f"Error saving cached image to {saving_cache_path}: {e}")
-        return None
     
 
     async def get_spell_map(self, session: aiohttp.ClientSession) -> dict[int, str]:
